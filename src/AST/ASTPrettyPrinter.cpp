@@ -62,10 +62,18 @@ void ASTPrettyPrinter::visit(ASTNodeBinary& node) {
 	m_os << m_tabstr << "Type: " << static_cast<int>(node.m_type) << "\n";
 	m_os << m_tabstr << "Lhs -> {\n";
 	ASTPrettyPrinter printer(m_os, m_tabs + 1);
-	node.m_left->visit(printer);
+	if (node.m_left) {
+		node.m_left->visit(printer);
+	} else {
+		m_os << m_tabstr << "nullnode\n";
+	}
 	m_os << m_tabstr << "}\n";
 	m_os << m_tabstr << "Rhs -> {\n";
-	node.m_right->visit(printer);
+	if (node.m_right) {
+		node.m_right->visit(printer);
+	} else {
+		m_os << m_tabstr << "nullnode\n";
+	}
 	m_os << m_tabstr << "}\n";
 }
 
@@ -74,7 +82,11 @@ void ASTPrettyPrinter::visit(ASTNodeUnary& node) {
 	m_os << m_tabstr << "Type: " << static_cast<int>(node.m_type) << "\n";
 	m_os << m_tabstr << "Branch -> {\n";
 	ASTPrettyPrinter printer(m_os, m_tabs + 1);
-	node.m_branch->visit(printer);
+	if (node.m_branch) {
+		node.m_branch->visit(printer);
+	} else {
+		m_os << m_tabstr << "nullnode\n";
+	}
 	m_os << m_tabstr << "}\n";
 }
 
