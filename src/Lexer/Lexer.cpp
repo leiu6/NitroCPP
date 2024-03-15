@@ -17,8 +17,19 @@ char Lexer::advance() {
 	return c;
 }
 
+char Lexer::getFirstNonWhitespace() {
+	char c;
+
+	do {
+		m_start = m_current;
+		c = advance();
+	} while (c == ' ' || c == '\t');
+
+	return c;
+}
+
 char Lexer::peek() {
-	return m_source[m_current];		
+	return (m_current < m_source.size()) ? m_source[m_current] : '\0';
 }
 
 bool Lexer::match(char expected) {
@@ -47,7 +58,45 @@ Token Lexer::endOfLine() {
 	};
 	m_line++;
 	m_col = 0;
+	m_line_begin = true;
 	return token;
+}
+
+unsigned Lexer::getCurrentIndentLevel() {
+	unsigned current = 0;
+
+	char c;
+	while ((c = peek()) == '\t') {
+		advance();
+		current++;
+	}
+	return current;
+}
+
+unsigned Lexer::determineLevelsOfDedent(unsigned current) {
+	unsigned dedents = 0;
+	while (current < m_indent_levels.back()) {
+		m_indent_levels.pop_back();
+		dedents++;
+	}
+	return dedents;
+}
+
+bool Lexer::indentDedent(Token& token_out) {
+	unsigned current = getCurrentIndentLevel();
+
+	if (current > m_indent_levels.back()) {
+		m_indent_levels.push_back(current);
+		token_out = simple(Token::Type::Indent);
+		return true;
+	} else if (current < m_indent_levels.back()) {
+		m_dedent_emit_count = determineLevelsOfDedent(current) - 1;
+		token_out = simple(Token::Type::Dedent);
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 
 Token Lexer::number() {
@@ -89,8 +138,6 @@ Token Lexer::error(std::string_view msg) {
 }
 
 Token Lexer::identifierOrKeyword() {
-	char c;
-
 	while (isalnum(peek()) || peek() == '_') {
 		advance();
 	}
@@ -104,13 +151,20 @@ Token Lexer::identifierOrKeyword() {
 }
 
 Token Lexer::next() {
-	char c;
+	if (m_dedent_emit_count > 0) {
+		m_dedent_emit_count--;
+		return simple(Token::Type::Dedent);
+	}
 
-	// Skip whitespace
-	do {
-		m_start = m_current;
-		c = advance();
-	} while (c == ' ');
+	if (m_line_begin) {
+		Token indent_or_dedent;
+		m_line_begin = false;
+		if (indentDedent(indent_or_dedent)) {
+			return indent_or_dedent;
+		}
+	}
+
+	char c = getFirstNonWhitespace();
 
 	switch(c) {
 		case '(': return simple(Token::Type::OpenParen);

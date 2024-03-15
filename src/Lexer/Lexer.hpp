@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string_view>
+#include <vector>
 
 #include "../global/defs.hpp"
 
@@ -42,6 +43,8 @@ public:
 	Token next();
 
 private:
+	bool m_line_begin = true;
+	std::vector<unsigned> m_indent_levels = { 0 };
 	unsigned m_dedent_emit_count = 0;
 	std::string_view m_source;
 	std::size_t m_current;
@@ -50,12 +53,21 @@ private:
 	std::size_t m_col;
 
 	// lexing helpers
+	
+	/**
+	* Skips all spaces. Does not skip tabs, since those control indent and
+	* dedent.
+	*/
+	char getFirstNonWhitespace();
 	char advance();
 	char peek();
 	bool match(char expected);
 
 	Token simple(Token::Type type);
 	Token endOfLine();
+	unsigned getCurrentIndentLevel();
+	unsigned determineLevelsOfDedent(unsigned current);
+	bool indentDedent(Token& token_out);
 	Token number();
 	Token error(std::string_view msg);
 	Token identifierOrKeyword();
