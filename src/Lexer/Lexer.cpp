@@ -8,7 +8,9 @@ Lexer::Lexer(std::string_view source)
 	: m_source(source), m_current(0), m_start(0), m_line(1), m_col(0) {}
 
 char Lexer::advance() {
-	char c = m_source[m_current++];
+	// Since string view does not include the null byte by design, we will
+	// artificially emit it so the lexer can stop.
+	char c = (m_current < m_source.size()) ? m_source[m_current++] : '\0';
 
 	if (c == '\n') {
 		m_line++;
@@ -95,9 +97,9 @@ Token Lexer::next() {
 		case '-': return simple(Token::Type::Minus);
 		case '*': return simple(match('*') ? Token::Type::StarStar : Token::Type::Star);
 		case '/': return simple(Token::Type::Slash);
-
-		case '\0': return simple(Token::Type::Eof);
 		
+		case '\0': return simple(Token::Type::Eof);
+
 		default: {
 		if (std::isdigit(c)) {
 			return number();

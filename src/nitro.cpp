@@ -53,9 +53,9 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	*/
-
-	Parser parser(lexer);
 	
+	Parser parser(lexer);
+
 	auto ast = parser.parse();
 	
 	if (!ast) {
