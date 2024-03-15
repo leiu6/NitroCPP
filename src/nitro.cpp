@@ -40,12 +40,14 @@ int main(int argc, char *argv[]) {
 	Token tk;
 	while (true) {
 		tk = lexer.next();
-		std::cout << "Token: \n";
-		std::cout << "Type: " << static_cast<int>(tk.type) << "\n";
-		std::cout << "Lexeme: " << tk.lexeme << "\n";
-		std::cout << "Line: " << tk.line << "\n";
-		std::cout << "Col: " << tk.col << "\n";
-		std::cout << std::endl;	
+		if (tk.lexeme.find('\t') != std::string_view::npos) {
+			tk.lexeme = "\\t";
+		} else if (tk.lexeme.find('\n') != std::string_view::npos) {
+			tk.lexeme = "\\n";
+		} else if (tk.lexeme.find('\0') != std::string_view::npos) {
+			tk.lexeme = "\\0";
+		}
+		std::cout << "[Type: " << static_cast<int>(tk.type) << ", \"" << tk.lexeme << "\", " << tk.line << ":" << tk.col << "]\n";
 
 		if (tk.type == Token::Type::Eof ||
 		    tk.type == Token::Type::Error) {
