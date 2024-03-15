@@ -12,11 +12,6 @@ char Lexer::advance() {
 	// artificially emit it so the lexer can stop.
 	char c = (m_current < m_source.size()) ? m_source[m_current++] : '\0';
 
-	if (c == '\n') {
-		m_line++;
-		m_col = 0;	
-	}
-
 	m_col++;
 
 	return c;
@@ -41,6 +36,18 @@ Token Lexer::simple(Token::Type type) {
 		m_line,
 		m_col	
 	};
+}
+
+Token Lexer::endOfLine() {
+	Token token{
+		Token::Type::Eol,
+		m_source.substr(m_start, m_current - m_start),
+		m_line,
+		m_col
+	};
+	m_line++;
+	m_col = 0;
+	return token;
 }
 
 Token Lexer::number() {
@@ -81,6 +88,21 @@ Token Lexer::error(std::string_view msg) {
 	};
 }
 
+Token Lexer::identifierOrKeyword() {
+	char c;
+
+	while (isalnum(peek()) || peek() == '_') {
+		advance();
+	}
+
+	return Token{
+		Token::Type::Identifier,
+		m_source.substr(m_start, m_current - m_start),
+		m_line,
+		m_col - (m_current - m_start - 1)
+	};
+}
+
 Token Lexer::next() {
 	char c;
 
@@ -88,7 +110,7 @@ Token Lexer::next() {
 	do {
 		m_start = m_current;
 		c = advance();
-	} while (c == ' ' || c == '\n' || c == '\t');
+	} while (c == ' ');
 
 	switch(c) {
 		case '(': return simple(Token::Type::OpenParen);
@@ -99,10 +121,13 @@ Token Lexer::next() {
 		case '/': return simple(Token::Type::Slash);
 		
 		case '\0': return simple(Token::Type::Eof);
+		case '\n': return endOfLine();
 
 		default: {
 		if (std::isdigit(c)) {
 			return number();
+		} else if (std::isalpha(c) || c == '_') {
+			return identifierOrKeyword();
 		} else {
 			return error("Unknown character");
 		}

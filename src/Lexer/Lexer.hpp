@@ -10,6 +10,11 @@ struct Token {
 	enum class Type {
 		// Enclosures and scoping
 		OpenParen, CloseParen,
+		Indent, Dedent,
+
+		Eol,	// End of line
+
+		Identifier,
 
 		// Mathematical symbols
 		Plus, Minus, Star, StarStar, Slash,
@@ -37,6 +42,7 @@ public:
 	Token next();
 
 private:
+	unsigned m_dedent_emit_count = 0;
 	std::string_view m_source;
 	std::size_t m_current;
 	std::size_t m_start;
@@ -49,8 +55,10 @@ private:
 	bool match(char expected);
 
 	Token simple(Token::Type type);
+	Token endOfLine();
 	Token number();
 	Token error(std::string_view msg);
+	Token identifierOrKeyword();
 };
 	
 }; // namespace Nitro

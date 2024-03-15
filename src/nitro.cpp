@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
 	// Test the lexer
 	Lexer lexer(source);
 
-	/*
+
 	Token tk;
 	while (true) {
 		tk = lexer.next();
@@ -52,9 +52,9 @@ int main(int argc, char *argv[]) {
 			break;
 		}
 	}
-	*/
-	
-	Parser parser(lexer);
+
+	Lexer lexer2(source);
+	Parser parser(lexer2);
 
 	auto ast = parser.parse();
 	
