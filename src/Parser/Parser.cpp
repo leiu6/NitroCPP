@@ -126,6 +126,13 @@ std::unique_ptr<ASTNode> Parser::parsePrimary() {
 	} else if (match(Token::Type::IntegerLiteral)) {
 		std::int64_t value = std::strtoll(m_previous.lexeme.cbegin(), nullptr, 10);
 		return std::make_unique<ASTNodeInt64>(m_previous, value);
+	} else if (match(Token::Type::OpenParen)) {
+		auto expr = parseExpression();
+		if (!match(Token::Type::CloseParen)) {
+			std::cerr << "Expected ')' at end of expression" << std::endl;
+			return nullptr;
+		}
+		return expr;
 	} else {
 		std::cerr << "Unexpected!!" << std::endl;
 		return nullptr;	
