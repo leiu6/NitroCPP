@@ -121,10 +121,10 @@ std::unique_ptr<ASTNode> Parser::parsePrefix() {
 
 std::unique_ptr<ASTNode> Parser::parsePrimary() {
 	if (match(Token::Type::FloatLiteral)) {
-		double value = std::strtod(m_previous.lexeme.cbegin(), nullptr);
+		double value = std::strtod(m_previous.lexeme.data(), nullptr);
 		return std::make_unique<ASTNodeFloat64>(m_previous, value);		
 	} else if (match(Token::Type::IntegerLiteral)) {
-		std::int64_t value = std::strtoll(m_previous.lexeme.cbegin(), nullptr, 10);
+		std::int64_t value = std::strtoll(m_previous.lexeme.data(), nullptr, 10);
 		return std::make_unique<ASTNodeInt64>(m_previous, value);
 	} else if (match(Token::Type::OpenParen)) {
 		auto expr = parseExpression();
