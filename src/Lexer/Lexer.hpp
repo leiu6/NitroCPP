@@ -15,13 +15,11 @@ struct Token {
 
 		Eol,	// End of line
 
-		Identifier,
-
 		// Mathematical symbols
 		Plus, Minus, Star, StarStar, Slash,
 
 		// Literals
-		FloatLiteral, IntegerLiteral,
+		FloatLiteral, IntegerLiteral, Identifier,
 
 		// Other
 	        Eof,
