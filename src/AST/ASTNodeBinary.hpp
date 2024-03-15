@@ -31,9 +31,9 @@ public:
 		visitor.visit(*this);
 	}
 
-	Type m_type;
 	std::unique_ptr<ASTNode> m_left;
 	std::unique_ptr<ASTNode> m_right;
+	Type m_type;
 };
 
 } // namespace Nitro
