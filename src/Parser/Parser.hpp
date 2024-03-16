@@ -31,6 +31,16 @@ private:
 
 	std::unique_ptr<ASTNode> parseExpression();
 
+	std::unique_ptr<ASTNode> parseOrAnd();
+
+	std::unique_ptr<ASTNode> parseBitwiseOrAndXor();
+
+	std::unique_ptr<ASTNode> parseEqualNotEqual();
+
+	std::unique_ptr<ASTNode> parseGreaterLessAndEqual();
+
+	std::unique_ptr<ASTNode> parseLShiftRShift();
+
 	std::unique_ptr<ASTNode> parsePlusMinus();
 
 	std::unique_ptr<ASTNode> parseMultiplyDivide();

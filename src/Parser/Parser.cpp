@@ -21,7 +21,176 @@ std::unique_ptr<ASTNode> Parser::parse() {
 }
 
 std::unique_ptr<ASTNode> Parser::parseExpression() {
-	return parsePlusMinus();	
+	return parseOrAnd();
+}
+
+std::unique_ptr<ASTNode> Parser::parseOrAnd() {
+	auto lhs = parseBitwiseOrAndXor();
+
+	for (;;) {
+		if (match(Token::Type::PipePipe)) {
+			auto rhs = parseBitwiseOrAndXor();
+			lhs = std::make_unique<ASTNodeBinary>(
+				m_previous,
+				ASTNodeBinary::Type::Or,
+				std::move(lhs),
+				std::move(rhs)
+				);
+		}
+		else if (match(Token::Type::AndAnd)) {
+			auto rhs = parseBitwiseOrAndXor();
+			lhs = std::make_unique<ASTNodeBinary>(
+				m_previous,
+				ASTNodeBinary::Type::And,
+				std::move(lhs),
+				std::move(rhs)
+				);
+		} else {
+			break;
+		}
+	}
+
+	return lhs;
+}
+
+std::unique_ptr<ASTNode> Parser::parseBitwiseOrAndXor() {
+	auto lhs = parseEqualNotEqual();
+
+	for (;;) {
+		if (match(Token::Type::Pipe)) {
+			auto rhs = parseEqualNotEqual();
+			lhs = std::make_unique<ASTNodeBinary>(
+				m_previous,
+				ASTNodeBinary::Type::BitwiseOr,
+				std::move(lhs),
+				std::move(rhs)
+				);
+		}
+		else if (match(Token::Type::And)) {
+			auto rhs = parseEqualNotEqual();
+			lhs = std::make_unique<ASTNodeBinary>(
+				m_previous,
+				ASTNodeBinary::Type::BitwiseAnd,
+				std::move(lhs),
+				std::move(rhs)
+				);
+		} else if (match(Token::Type::Carat)) {
+			auto rhs = parseEqualNotEqual();
+			lhs = std::make_unique<ASTNodeBinary>(
+				m_previous,
+				ASTNodeBinary::Type::BitwiseXor,
+				std::move(lhs),
+				std::move(rhs)
+			);
+		} else {
+			break;
+		}
+	}
+
+	return lhs;
+}
+
+std::unique_ptr<ASTNode> Parser::parseEqualNotEqual() {
+	auto lhs = parseGreaterLessAndEqual();
+
+	for (;;) {
+		if (match(Token::Type::EqualEqual)) {
+			auto rhs = parseGreaterLessAndEqual();
+			lhs = std::make_unique<ASTNodeBinary>(
+				m_previous,
+				ASTNodeBinary::Type::Equality,
+				std::move(lhs),
+				std::move(rhs)
+				);
+		}
+		else if (match(Token::Type::NotEqual)) {
+			auto rhs = parseGreaterLessAndEqual();
+			lhs = std::make_unique<ASTNodeBinary>(
+				m_previous,
+				ASTNodeBinary::Type::NonEquality,
+				std::move(lhs),
+				std::move(rhs)
+				);
+		} else {
+			break;
+		}
+	}
+
+	return lhs;
+}
+
+std::unique_ptr<ASTNode> Parser::parseGreaterLessAndEqual() {
+	auto lhs = parseLShiftRShift();
+
+	for (;;) {
+		if (match(Token::Type::Greater)) {
+			auto rhs = parseLShiftRShift();
+			lhs = std::make_unique<ASTNodeBinary>(
+				m_previous,
+				ASTNodeBinary::Type::Greater,
+				std::move(lhs),
+				std::move(rhs)
+				);
+		} else if (match(Token::Type::GreaterEqual)) {
+			auto rhs = parseLShiftRShift();
+			lhs = std::make_unique<ASTNodeBinary>(
+				m_previous,
+				ASTNodeBinary::Type::GreaterEqual,
+				std::move(lhs),
+				std::move(rhs)
+				);
+		} else if (match(Token::Type::Less)) {
+			auto rhs = parseLShiftRShift();
+			lhs = std::make_unique<ASTNodeBinary>(
+				m_previous,
+				ASTNodeBinary::Type::Less,
+				std::move(lhs),
+				std::move(rhs)
+				);
+		} else if (match(Token::Type::LessEqual)) {
+			auto rhs = parseLShiftRShift();
+			lhs = std::make_unique<ASTNodeBinary>(
+				m_previous,
+				ASTNodeBinary::Type::LessEqual,
+				std::move(lhs),
+				std::move(rhs)
+				);
+		} else {
+			break;
+		}
+	}
+
+	return lhs;
+}
+
+std::unique_ptr<ASTNode> Parser::parseLShiftRShift() {
+	auto lhs = parsePlusMinus();
+
+	for (;;) {
+		if (match(Token::Type::GreaterGreater)) {
+			auto rhs = parsePlusMinus();
+			lhs = std::make_unique<ASTNodeBinary>(
+				m_previous,
+				ASTNodeBinary::Type::RShift,
+				std::move(lhs),
+				std::move(rhs)
+				);
+		}
+		else if (match(Token::Type::LessLess)) {
+			auto rhs = parsePlusMinus();
+			lhs = std::make_unique<ASTNodeBinary>(
+				m_previous,
+				ASTNodeBinary::Type::LShift,
+				std::move(lhs),
+				std::move(rhs)
+				);
+		}
+		else {
+			break;
+		}
+	}
+
+	return lhs;
 }
 
 std::unique_ptr<ASTNode> Parser::parsePlusMinus() {
@@ -113,6 +282,18 @@ std::unique_ptr<ASTNode> Parser::parsePrefix() {
 			m_previous,
 			ASTNodeUnary::Type::Negate,
 			parsePrefix()		
+		);
+	} else if (match(Token::Type::Not)) {
+		return std::make_unique<ASTNodeUnary>(
+			m_previous,
+			ASTNodeUnary::Type::Not,
+			parsePrefix()
+		);
+	} else if (match(Token::Type::Tilde)) {
+		return std::make_unique<ASTNodeUnary>(
+			m_previous,
+			ASTNodeUnary::Type::BitwiseNot,
+			parsePrefix()
 		);
 	}
 
