@@ -67,6 +67,7 @@ unsigned Lexer::getCurrentIndentLevel() {
 
 	char c;
 	while ((c = peek()) == '\t') {
+		m_col += TAB_WIDTH - 1;
 		advance();
 		current++;
 	}
@@ -137,14 +138,93 @@ Token Lexer::error(std::string_view msg) {
 	};
 }
 
+Token::Type Lexer::checkKeyword(std::size_t start, std::size_t length, std::string_view rest, Token::Type type) {
+	if (m_current - m_start == start + length &&
+	    m_source.substr(m_start + start, length) == rest) {
+		return type;
+	}
+
+	return Token::Type::Identifier;
+}
+
+Token::Type Lexer::identifierOrKeywordType() {
+	switch (m_source[m_start]) {
+		case 'b': return checkKeyword(1, 4, "reak", Token::Type::BreakKeyword);
+		case 'c': return checkKeyword(1, 7, "ontinue", Token::Type::ContinueKeyword);
+		case 'e': return checkKeyword(1, 3, "lse", Token::Type::ElseKeyword);
+		case 'f': {
+			if (m_current - m_start > 1) {
+				switch (m_source[m_start + 1]) {
+					case 'o': return checkKeyword(2, 1, "r", Token::Type::ForKeyword);
+					case 'a': return checkKeyword(2, 3, "lse", Token::Type::FalseKeyword);
+				}
+			}
+		} break;
+		case 'i': return checkKeyword(1, 1, "f", Token::Type::IfKeyword);
+		case 'l': return checkKeyword(1, 2, "et", Token::Type::LetKeyword);
+		case 'm': return checkKeyword(1, 5, "odule", Token::Type::ModuleKeyword);
+		case 'n': return checkKeyword(1, 2, "il", Token::Type::NilKeyword);
+		case 'r': return checkKeyword(1, 5, "eturn", Token::Type::ReturnKeyword);
+		case 't': return checkKeyword(1, 3, "rue", Token::Type::TrueKeyword);
+		case 'w': return checkKeyword(1, 4, "hile", Token::Type::WhileKeyword);
+	}
+
+	return Token::Type::Identifier;
+}
+
 Token Lexer::identifierOrKeyword() {
 	while (isalnum(peek()) || peek() == '_') {
 		advance();
 	}
 
 	return Token{
-		Token::Type::Identifier,
+		identifierOrKeywordType(),
 		m_source.substr(m_start, m_current - m_start),
+		m_line,
+		m_col - (m_current - m_start - 1)
+	};
+}
+
+Token Lexer::characterLiteral() {
+	advance();
+	if (!match('\'')) {
+		return error("Expected \"'\" after character literal");
+	}
+
+	return Token{
+		Token::Type::CharLiteral,
+		m_source.substr(m_start + 1, m_current - m_start - 2),
+		m_line,
+		m_col - 2
+	};
+}
+
+Token Lexer::stringLiteral() {
+	char c;
+
+	// TODO: implement multi-line continuation
+
+	while (true) {
+		c = peek();
+
+		if (std::isalnum(c) || std::isspace(c)) {
+			advance();
+		} else if (c == '\\') {
+			// Handle escape sequence
+			advance();
+			advance();
+		} else {
+			break;
+		}
+	}
+
+	if (!match('"')) {
+		return error("Expected '\"' after string literal");
+	}
+
+	return Token{
+		Token::Type::StringLiteral,
+		m_source.substr(m_start + 1, m_current - m_start - 2),
 		m_line,
 		m_col - (m_current - m_start - 1)
 	};
@@ -169,13 +249,36 @@ Token Lexer::next() {
 	switch(c) {
 		case '(': return simple(Token::Type::OpenParen);
 		case ')': return simple(Token::Type::CloseParen);
+		case '[': return simple(Token::Type::OpenBracket);
+		case ']': return simple(Token::Type::CloseBracket);
 		case '+': return simple(Token::Type::Plus);
 		case '-': return simple(Token::Type::Minus);
 		case '*': return simple(match('*') ? Token::Type::StarStar : Token::Type::Star);
 		case '/': return simple(Token::Type::Slash);
+		case '>': return simple(
+			match('>') ? Token::Type::GreaterGreater : (
+				match('=') ? Token::Type::GreaterEqual : Token::Type::Greater
+			)
+		);
+		case '<': return simple(
+			match('<') ? Token::Type::LessLess : (
+				match('=') ? Token::Type::LessEqual : Token::Type::Less
+			)
+		);
+		case '=': return simple(match('=') ? Token::Type::EqualEqual : Token::Type::Equal);
+		case '!': return simple(match('=') ? Token::Type::NotEqual : Token::Type::Not);
+		case '&': return simple(match('&') ? Token::Type::AndAnd : Token::Type::And);
+		case '|': return simple(match('|') ? Token::Type::PipePipe : Token::Type::Pipe);
+		case '~': return simple(Token::Type::Tilde);
+		case '^': return simple(Token::Type::Carat);
+		case ':': return simple(Token::Type::Colon);
+		case '?': return simple(Token::Type::Question);
+		case ',': return simple(Token::Type::Comma);
 		
 		case '\0': return simple(Token::Type::Eof);
 		case '\n': return endOfLine();
+		case '\'': return characterLiteral();
+		case '"': return stringLiteral();
 
 		default: {
 		if (std::isdigit(c)) {

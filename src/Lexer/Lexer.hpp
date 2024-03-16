@@ -11,15 +11,30 @@ struct Token {
 	enum class Type {
 		// Enclosures and scoping
 		OpenParen, CloseParen,
+		OpenBracket, CloseBracket,
 		Indent, Dedent,
 
 		Eol,	// End of line
 
 		// Mathematical symbols
 		Plus, Minus, Star, StarStar, Slash,
+		Greater, GreaterGreater, GreaterEqual, Less, LessLess, LessEqual,
+		Equal, EqualEqual, Not, NotEqual,
+		And, AndAnd, Pipe, PipePipe,
+		Tilde, Carat,
+		Colon, Question, Comma,
 
 		// Literals
 		FloatLiteral, IntegerLiteral, Identifier,
+		CharLiteral, StringLiteral,
+
+		// Keywords
+		IfKeyword, ElseKeyword,
+		WhileKeyword, ForKeyword, ContinueKeyword, BreakKeyword,
+		ReturnKeyword,
+		ModuleKeyword,
+		LetKeyword,
+		TrueKeyword, FalseKeyword, NilKeyword,
 
 		// Other
 	        Eof,
@@ -41,6 +56,8 @@ public:
 	Token next();
 
 private:
+	static constexpr std::size_t TAB_WIDTH = 4; // Spaces
+
 	bool m_line_begin = true;
 	std::vector<unsigned> m_indent_levels = { 0 };
 	unsigned m_dedent_emit_count = 0;
@@ -68,7 +85,13 @@ private:
 	bool indentDedent(Token& token_out);
 	Token number();
 	Token error(std::string_view msg);
+
+	Token::Type checkKeyword(std::size_t start, std::size_t length, std::string_view rest, Token::Type type);
+	Token::Type identifierOrKeywordType();
+
 	Token identifierOrKeyword();
+	Token characterLiteral();
+	Token stringLiteral();
 };
 	
-}; // namespace Nitro
+} // namespace Nitro
