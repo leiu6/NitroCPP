@@ -48,6 +48,13 @@ void ASTPrettyPrinter::visit(ASTNodeConstant<std::string_view>& node) {
 	m_os << m_tabstr << "}\n";
 }
 
+void ASTPrettyPrinter::visit(ASTNodeConstant<char>& node) {
+	m_os << m_tabstr << "Constant: {\n";
+	m_os << m_tabstr << "Type: Char\n";
+	m_os << m_tabstr << "Value: " << node.m_value << "\n";
+	m_os << m_tabstr << "}\n";
+}
+
 void ASTPrettyPrinter::visit(ASTNodeNil& node) {
 	Token tk = node.m_tok;
 	(void)tk;

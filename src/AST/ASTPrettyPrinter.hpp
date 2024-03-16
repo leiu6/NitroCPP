@@ -20,6 +20,8 @@ public:
 
 	void visit(ASTNodeConstant<std::string_view>& node) override;
 
+	void visit(ASTNodeConstant<char>& node) override;
+
 	void visit(ASTNodeNil& node) override;
 
 	void visit(ASTNodeBinary& node) override;

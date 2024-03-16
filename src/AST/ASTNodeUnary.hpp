@@ -10,8 +10,9 @@ class ASTNodeUnary : public ASTNode {
 public:
 	enum class Type {
 		Plus, /* Does nothing! */
-		Negate
-		// TODO: add not
+		Negate,
+		Not,
+		BitwiseNot
 	};
 
 	ASTNodeUnary(Token tok, Type type, std::unique_ptr<ASTNode> branch) : 

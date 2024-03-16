@@ -13,7 +13,24 @@ public:
 		Sub,
 		Mult,
 		Div,
-		Pow
+		Pow,
+
+		Greater,
+		GreaterEqual,
+		RShift,
+		Less,
+		LessEqual,
+		LShift,
+
+		Equality,
+		NonEquality,
+
+		BitwiseAnd,
+		BitwiseOr,
+		BitwiseXor,
+
+		And,
+		Or
 	};
 
 	ASTNodeBinary(

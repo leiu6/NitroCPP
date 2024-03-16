@@ -22,6 +22,8 @@ public:
 
 	virtual void visit(ASTNodeConstant<std::string_view>& node) = 0;
 
+	virtual void visit(ASTNodeConstant<char>& node) = 0;
+
 	virtual void visit(ASTNodeNil& node) = 0;
 
 	virtual void visit(ASTNodeBinary& node) = 0;

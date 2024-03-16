@@ -32,5 +32,7 @@ using ASTNodeBool = ASTNodeConstant<bool>;
 
 using ASTNodeString = ASTNodeConstant<std::string_view>;
 
+using ASTNodeChar = ASTNodeConstant<char>;
+
 } // namespace Nitro
 
