@@ -15,6 +15,7 @@ class ASTNodeVariableInvokation;
 class ASTNodeVariableDeclaration;
 class ASTNodeStatementSet;
 class ASTNodeConditional;
+class ASTNodeFunctionDefinition;
 
 class ASTVisitor {
 public:
@@ -41,6 +42,8 @@ public:
 	virtual void visit(ASTNodeStatementSet& node) = 0;
 
 	virtual void visit(ASTNodeConditional& node) = 0;
+
+	virtual void visit(ASTNodeFunctionDefinition& node) = 0;
 };
 
 } // namespace Nitro

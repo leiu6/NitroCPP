@@ -11,6 +11,7 @@
 #include "../AST/ASTNodeVariableDeclaration.hpp"
 #include "../AST/ASTNodeStatementSet.hpp"
 #include "../AST/ASTNodeConditional.hpp"
+#include "../AST/ASTNodeFunctionDefinition.hpp"
 
 namespace Nitro {
 
@@ -23,7 +24,69 @@ Parser::Parser(Lexer& lexer) : m_lexer(lexer) {
 }
 
 std::unique_ptr<ASTNode> Parser::parse() {
-	return parseStatements();
+	return parseTopLevel();
+}
+
+std::unique_ptr<ASTNode> Parser::parseTopLevel() {
+	std::vector<std::unique_ptr<ASTNode>> program;
+
+	if (match(Token::Type::ModuleKeyword)) {
+		// We are defining a module
+		program.push_back(parseModuleDefinition());
+	}
+
+	while (!match(Token::Type::Eof)) {
+		if (match(Token::Type::FuncKeyword)) {
+			program.push_back(parseFunctionDefinition());
+		} else {
+			program.push_back(parseStatements());
+		}
+	}
+
+	return std::make_unique<ASTNodeStatementSet>(m_current, std::move(program));
+}
+
+std::unique_ptr<ASTNode> Parser::parseModuleDefinition() {
+	return nullptr;
+}
+
+std::unique_ptr<ASTNode> Parser::parseFunctionDefinition() {
+	consume(Token::Type::Identifier, "Expected identifier for function definition");
+	Token identifier = m_previous;
+	consume(Token::Type::OpenParen, "Expected '(' after function identifier");
+
+	std::vector<std::string_view> args;
+	while (match(Token::Type::Eol) || match(Token::Type::Indent) || match(Token::Type::Dedent)) {}
+	if (peek(Token::Type::Identifier)) {
+		while (consume(Token::Type::Identifier, "Expected identifier for function argument")) {
+
+			args.push_back(m_previous.lexeme);
+
+			while (match(Token::Type::Eol) || match(Token::Type::Indent) || match(Token::Type::Dedent)) {}
+			if (match(Token::Type::Comma)) {
+				while (match(Token::Type::Eol) || match(Token::Type::Indent) || match(Token::Type::Dedent)) {}
+				continue;
+			} else {
+				break;
+			}
+		}
+	}
+
+	consume(Token::Type::CloseParen, "Expected ')' after argument list");
+	consume(Token::Type::Colon, "Expected ':'");
+	consume(Token::Type::Eol, "Expected newline");
+	consume(Token::Type::Indent, "Expected new indentation level after function definition");
+
+	auto contents = parseStatements();
+
+	consume(Token::Type::Dedent, "Expected lower indentation level after function definition");
+
+	return std::make_unique<ASTNodeFunctionDefinition>(
+		identifier, 
+		identifier.lexeme, 
+		std::move(args),
+		std::move(contents)
+	);
 }
 
 std::unique_ptr<ASTNode> Parser::parseStatements() {
@@ -34,6 +97,12 @@ std::unique_ptr<ASTNode> Parser::parseStatements() {
 		peek(Token::Type::Dedent) ||
 		peek(Token::Type::Eof)
 		)) {
+
+		// Skips empty lines at the current indent level
+		if (match(Token::Type::Eol)) {
+			std::cout << "Bl" << std::endl;
+		}
+
 		statements.push_back(parseStatement());
 	}
 

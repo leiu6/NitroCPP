@@ -11,6 +11,7 @@
 #include "ASTNodeVariableDeclaration.hpp"
 #include "ASTNodeStatementSet.hpp"
 #include "ASTNodeConditional.hpp"
+#include "ASTNodeFunctionDefinition.hpp"
 
 namespace Nitro {
 
@@ -156,6 +157,27 @@ void ASTPrettyPrinter::visit(ASTNodeConditional& node) {
 		node.m_else_statement->visit(printer);
 		m_os << m_tabstr << "}\n";
 	}
+}
+
+void ASTPrettyPrinter::visit(ASTNodeFunctionDefinition& node) {
+	m_os << m_tabstr << "Function Definition: {\n";
+	m_os << m_tabstr << "Id: " << node.m_identifier << "\n";
+	m_os << m_tabstr << "Args: (";
+
+	for (std::size_t i = 0; i < node.m_args.size(); i++) {
+		m_os << node.m_args[i];
+
+		if (i != node.m_args.size() - 1) {
+			m_os << ", ";
+		}
+	}
+
+	m_os << ")\n";
+
+	m_os << m_tabstr << "Contents -> {\n";
+	ASTPrettyPrinter printer(m_os, m_tabs + 1);
+	node.m_contents->visit(printer);
+	m_os << m_tabstr << "}\n";
 }
 
 } // namespace Nitro

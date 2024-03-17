@@ -16,6 +16,8 @@ public:
 
 private:
 	inline void errorCurrent(std::string_view msg) {
+		advance(); // So we don't get stuck in a loop
+
 		if (m_had_error) {
 			return;
 		}
@@ -24,8 +26,6 @@ private:
 		m_panic_mode = true;
 
 		std::cerr << "Error: " << m_current.line << ":" << m_current.col << ": " << msg << "\n";
-
-		advance(); // So we don't get stuck in a loop
 	}
 
 	inline Token advance() {
@@ -81,6 +81,12 @@ private:
 		}
 		return false;
 	}
+
+	std::unique_ptr<ASTNode> parseTopLevel();
+
+	std::unique_ptr<ASTNode> parseModuleDefinition();
+
+	std::unique_ptr<ASTNode> parseFunctionDefinition();
 
 	std::unique_ptr<ASTNode> parseStatements();
 
