@@ -1,6 +1,7 @@
 #include "Parser.hpp"
 
 #include <cctype>
+#include <sstream>
 
 #include "../AST/ASTNodeBinary.hpp"
 #include "../AST/ASTNodeUnary.hpp"
@@ -9,6 +10,7 @@
 #include "../AST/ASTNodeVariableInvokation.hpp"
 #include "../AST/ASTNodeVariableDeclaration.hpp"
 #include "../AST/ASTNodeStatementSet.hpp"
+#include "../AST/ASTNodeConditional.hpp"
 
 namespace Nitro {
 
@@ -41,9 +43,57 @@ std::unique_ptr<ASTNode> Parser::parseStatements() {
 std::unique_ptr<ASTNode> Parser::parseStatement() {
 	if (match(Token::Type::LetKeyword)) {
 		return parseVariableDeclaration();
+	} else if (match(Token::Type::IfKeyword)) {
+		return parseConditional();
 	} else {
 		return parseExpressionStatement();
 	}
+}
+
+std::unique_ptr<ASTNode> Parser::parseConditional() {
+	using Conditional = ASTNodeConditional::Conditional;
+
+	std::vector<Conditional> conditions;
+	std::unique_ptr<ASTNode> else_condition = false;
+
+	bool has_else = false;
+	for (;;) {
+		consume(Token::Type::OpenParen, "Expected '(' after conditional");
+
+		auto expr = parseExpression();
+
+		consume(Token::Type::CloseParen, "Expected ')' after conditional expression");
+		consume(Token::Type::Colon, "Expected ':' after conditional statement");
+		consume(Token::Type::Eol, "Expected new line after conditional statement");
+		consume(Token::Type::Indent, "Expected new indentation level after conditional");
+
+		auto statements = parseStatements();
+
+		consume(Token::Type::Dedent, "Expected lower indentation level at end of conditional scope");
+
+		conditions.push_back(Conditional{ std::move(expr), std::move(statements) });
+
+		if (match(Token::Type::ElseKeyword)) {
+			if (match(Token::Type::IfKeyword)) {
+				continue;
+			} else {
+				has_else = true;
+				break;
+			}
+		} else {
+			break;
+		}
+	}
+
+	if (has_else) {
+		consume(Token::Type::Colon, "Expected ':' after else");
+		consume(Token::Type::Eol, "Expected newline after else:");
+		consume(Token::Type::Indent, "Expected new scope after else:");
+		else_condition = parseStatements();
+		consume(Token::Type::Dedent, "Expected lower indentation level at end of conditional scope");
+	}
+
+	return std::make_unique<ASTNodeConditional>(m_current, std::move(conditions), std::move(else_condition));
 }
 
 std::unique_ptr<ASTNode> Parser::parseVariableDeclaration() {
@@ -383,7 +433,8 @@ std::unique_ptr<ASTNode> Parser::parsePrimary() {
 	} else if (match(Token::Type::Identifier)) {
 		return parseVariableCall();
 	} else {
-		std::cerr << "Unexpected '" << m_current.lexeme << "'" << std::endl;
+		std::string msg = std::string{ "Unexpected '" } + std::string{ m_current.lexeme } + std::string{"'"};
+		errorCurrent(msg);
 		return nullptr;	
 	}
 }

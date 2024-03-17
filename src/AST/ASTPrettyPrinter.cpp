@@ -151,11 +151,9 @@ void ASTPrettyPrinter::visit(ASTNodeConditional& node) {
 		m_os << m_tabstr << "}\n";
 	}
 
-	if (node.m_else.first) {
+	if (node.m_else_statement) {
 		m_os << m_tabstr << "else -> {\n";
-		node.m_else.first->visit(printer);
-		m_os << m_tabstr << "} then -> {\n";
-		node.m_else.second->visit(printer);
+		node.m_else_statement->visit(printer);
 		m_os << m_tabstr << "}\n";
 	}
 }

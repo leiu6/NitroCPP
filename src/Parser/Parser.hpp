@@ -25,6 +25,7 @@ private:
 
 		std::cerr << "Error: " << m_current.line << ":" << m_current.col << ": " << msg << "\n";
 
+		advance(); // So we don't get stuck in a loop
 	}
 
 	inline Token advance() {
@@ -40,6 +41,15 @@ private:
 			return true;
 		}
 		return false;
+	}
+
+	inline bool consume(Token::Type type, std::string_view error) {
+		if (!match(type)) {
+			errorCurrent(error);
+			return false;
+		}
+
+		return true;
 	}
 
 	inline bool peek(Token::Type type) {
@@ -76,6 +86,7 @@ private:
 
 	std::unique_ptr<ASTNode> parseStatement();
 
+	std::unique_ptr<ASTNode> parseConditional();
 	std::unique_ptr<ASTNode> parseVariableDeclaration();
 	std::unique_ptr<ASTNode> parseExpressionStatement();
 
