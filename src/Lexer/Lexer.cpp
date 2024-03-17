@@ -155,8 +155,9 @@ Token::Type Lexer::identifierOrKeywordType() {
 		case 'f': {
 			if (m_current - m_start > 1) {
 				switch (m_source[m_start + 1]) {
-					case 'o': return checkKeyword(2, 1, "r", Token::Type::ForKeyword);
 					case 'a': return checkKeyword(2, 3, "lse", Token::Type::FalseKeyword);
+					case 'u': return checkKeyword(2, 2, "nc", Token::Type::FuncKeyword);
+					case 'o': return checkKeyword(2, 1, "r", Token::Type::ForKeyword);
 				}
 			}
 		} break;
