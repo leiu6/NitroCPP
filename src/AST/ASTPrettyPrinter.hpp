@@ -34,6 +34,8 @@ public:
 
 	void visit(ASTNodeStatementSet& node) override;
 
+	void visit(ASTNodeConditional& node) override;
+
 private:
 	std::ostream& m_os;
 	int m_tabs;
