@@ -7,6 +7,9 @@
 #include "ASTNodeNil.hpp"
 #include "ASTNodeBinary.hpp"
 #include "ASTNodeUnary.hpp"
+#include "ASTNodeVariableInvokation.hpp"
+#include "ASTNodeVariableDeclaration.hpp"
+#include "ASTNodeStatementSet.hpp"
 
 namespace Nitro {
 
@@ -44,14 +47,14 @@ void ASTPrettyPrinter::visit(ASTNodeConstant<bool>& node) {
 void ASTPrettyPrinter::visit(ASTNodeConstant<std::string_view>& node) {
 	m_os << m_tabstr << "Constant: {\n";
 	m_os << m_tabstr << "Type: String\n";
-	m_os << m_tabstr << "Value: " << node.m_value << "\n";
+	m_os << m_tabstr << "Value: \"" << node.m_value << "\"\n";
 	m_os << m_tabstr << "}\n";
 }
 
 void ASTPrettyPrinter::visit(ASTNodeConstant<char>& node) {
 	m_os << m_tabstr << "Constant: {\n";
 	m_os << m_tabstr << "Type: Char\n";
-	m_os << m_tabstr << "Value: " << node.m_value << "\n";
+	m_os << m_tabstr << "Value: '" << node.m_value << "'\n";
 	m_os << m_tabstr << "}\n";
 }
 
@@ -94,6 +97,43 @@ void ASTPrettyPrinter::visit(ASTNodeUnary& node) {
 	} else {
 		m_os << m_tabstr << "nullnode\n";
 	}
+	m_os << m_tabstr << "}\n";
+}
+
+void ASTPrettyPrinter::visit(ASTNodeVariableInvokation& node) {
+	m_os << m_tabstr << "Invoke var: {\n";
+	m_os << m_tabstr << "Name: " << node.m_identifier << "\n";
+	m_os << m_tabstr << "N Args: " << node.m_args.size() << "\n";
+
+	for (auto & arg : node.m_args) {
+		ASTPrettyPrinter printer(m_os, m_tabs + 1);
+		arg->visit(printer);
+	}
+
+	m_os << m_tabstr << "}\n";
+}
+
+void ASTPrettyPrinter::visit(ASTNodeVariableDeclaration& node) {
+	m_os << m_tabstr << "Declare var: {\n";
+	m_os << m_tabstr << "Name: " << node.m_identifier << "\n";
+	m_os << m_tabstr << "Assign -> {\n";
+	ASTPrettyPrinter printer(m_os, m_tabs + 1);
+	node.m_assign->visit(printer);
+	m_os << m_tabstr << "}\n";
+}
+
+void ASTPrettyPrinter::visit(ASTNodeStatementSet& node) {
+	m_os << m_tabstr << "Statements: {\n";
+	ASTPrettyPrinter printer(m_os, m_tabs + 1);
+
+	for (auto& statement : node.m_statements) {
+		if (statement) {
+			statement->visit(printer);
+		}
+		
+		m_os << m_tabstr << "\n";
+	}
+
 	m_os << m_tabstr << "}\n";
 }
 

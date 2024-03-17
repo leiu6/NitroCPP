@@ -11,6 +11,9 @@ template <typename T> class ASTNodeConstant;
 class ASTNodeNil;
 class ASTNodeBinary;
 class ASTNodeUnary;
+class ASTNodeVariableInvokation;
+class ASTNodeVariableDeclaration;
+class ASTNodeStatementSet;
 
 class ASTVisitor {
 public:
@@ -29,6 +32,12 @@ public:
 	virtual void visit(ASTNodeBinary& node) = 0;
 
 	virtual void visit(ASTNodeUnary& node) = 0;
+
+	virtual void visit(ASTNodeVariableInvokation& node) = 0;
+
+	virtual void visit(ASTNodeVariableDeclaration& node) = 0;
+
+	virtual void visit(ASTNodeStatementSet& node) = 0;
 };
 
 } // namespace Nitro

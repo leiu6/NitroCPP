@@ -6,18 +6,74 @@
 #include "../AST/ASTNodeUnary.hpp"
 #include "../AST/ASTNodeConstant.hpp"
 #include "../AST/ASTNodeNil.hpp"
+#include "../AST/ASTNodeVariableInvokation.hpp"
+#include "../AST/ASTNodeVariableDeclaration.hpp"
+#include "../AST/ASTNodeStatementSet.hpp"
 
 namespace Nitro {
 
 Parser::Parser(Lexer& lexer) : m_lexer(lexer) {
 	m_previous = m_current = m_lexer.next();
+	m_next = m_lexer.next();
 	m_ast      = nullptr;
 	m_had_error = false;
 	m_panic_mode = false;
 }
 
 std::unique_ptr<ASTNode> Parser::parse() {
-	return parseExpression();
+	return parseStatements();
+}
+
+std::unique_ptr<ASTNode> Parser::parseStatements() {
+	std::vector<std::unique_ptr<ASTNode>> statements;
+	Token beginning = m_current;
+
+	while (!(
+		peek(Token::Type::Dedent) ||
+		peek(Token::Type::Eof)
+		)) {
+		statements.push_back(parseStatement());
+	}
+
+	return std::make_unique<ASTNodeStatementSet>(beginning, std::move(statements));
+}
+
+std::unique_ptr<ASTNode> Parser::parseStatement() {
+	if (match(Token::Type::LetKeyword)) {
+		return parseVariableDeclaration();
+	} else {
+		return parseExpressionStatement();
+	}
+}
+
+std::unique_ptr<ASTNode> Parser::parseVariableDeclaration() {
+	Token identifier = m_current;
+	if (!match(Token::Type::Identifier)) {
+		errorCurrent("Expected identifier");
+	}
+
+	std::unique_ptr<ASTNode> expr;
+	if (match(Token::Type::Equal)) {
+		expr = parseExpression();
+	} else {
+		expr = std::make_unique<ASTNodeNil>(m_current);
+	}
+
+	return std::make_unique<ASTNodeVariableDeclaration>(
+		identifier, 
+		identifier.lexeme, 
+		std::move(expr)
+	);
+}
+
+std::unique_ptr<ASTNode> Parser::parseExpressionStatement() {
+	auto expr = parseExpression();
+
+	if (!match(Token::Type::Eol)) {
+		errorCurrent("Expected a newline");
+	}
+
+	return expr;
 }
 
 std::unique_ptr<ASTNode> Parser::parseExpression() {
@@ -307,6 +363,16 @@ std::unique_ptr<ASTNode> Parser::parsePrimary() {
 	} else if (match(Token::Type::IntegerLiteral)) {
 		std::int64_t value = std::strtoll(m_previous.lexeme.data(), nullptr, 10);
 		return std::make_unique<ASTNodeInt64>(m_previous, value);
+	} else if (match(Token::Type::TrueKeyword)) {
+		return std::make_unique<ASTNodeBool>(m_previous, true);
+	} else if (match(Token::Type::FalseKeyword)) {
+		return std::make_unique<ASTNodeBool>(m_previous, false);
+	} else if (match(Token::Type::NilKeyword)) {
+		return std::make_unique<ASTNodeNil>(m_previous);
+	} else if (match(Token::Type::CharLiteral)) {
+		return std::make_unique<ASTNodeChar>(m_previous, m_previous.lexeme[0]);
+	} else if (match(Token::Type::StringLiteral)) {
+		return std::make_unique<ASTNodeString>(m_previous, m_previous.lexeme);
 	} else if (match(Token::Type::OpenParen)) {
 		auto expr = parseExpression();
 		if (!match(Token::Type::CloseParen)) {
@@ -314,10 +380,39 @@ std::unique_ptr<ASTNode> Parser::parsePrimary() {
 			return nullptr;
 		}
 		return expr;
+	} else if (match(Token::Type::Identifier)) {
+		return parseVariableCall();
 	} else {
-		std::cerr << "Unexpected!!" << std::endl;
+		std::cerr << "Unexpected '" << m_current.lexeme << "'" << std::endl;
 		return nullptr;	
 	}
+}
+
+std::unique_ptr<ASTNode> Parser::parseVariableCall() {
+	std::vector<std::unique_ptr<ASTNode>> args{};
+	Token tok = m_previous;
+
+	// TODO: implement system for no parenthesis function calls
+	if (match(Token::Type::OpenParen)) {
+		while (!match(Token::Type::Eof)) {
+			// This is a bit of a hack
+			while (match(Token::Type::Eol) || match(Token::Type::Indent) || match(Token::Type::Dedent)) {}
+
+			args.push_back(parseExpression());
+
+			while (match(Token::Type::Eol) || match(Token::Type::Indent) || match(Token::Type::Dedent)) {}
+
+			if (!match(Token::Type::Comma)) {
+				break;
+			}
+		}
+
+		if (!match(Token::Type::CloseParen)) {
+			errorCurrent("Expected ')' after function call");
+		}
+	}
+
+	return std::make_unique<ASTNodeVariableInvokation>(tok, std::move(args));
 }
 
 } // namespace Nitro

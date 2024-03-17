@@ -28,6 +28,12 @@ public:
 
 	void visit(ASTNodeUnary& node) override;
 
+	void visit(ASTNodeVariableInvokation& node) override;
+
+	void visit(ASTNodeVariableDeclaration& node) override;
+
+	void visit(ASTNodeStatementSet& node) override;
+
 private:
 	std::ostream& m_os;
 	int m_tabs;
