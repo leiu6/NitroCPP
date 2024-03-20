@@ -12,6 +12,7 @@
 #include "../AST/ASTNodeStatementSet.hpp"
 #include "../AST/ASTNodeConditional.hpp"
 #include "../AST/ASTNodeFunctionDefinition.hpp"
+#include "../AST/ASTNodeFunctionReturn.hpp"
 
 namespace Nitro {
 
@@ -93,17 +94,17 @@ std::unique_ptr<ASTNode> Parser::parseStatements() {
 	std::vector<std::unique_ptr<ASTNode>> statements;
 	Token beginning = m_current;
 
-	while (!(
-		peek(Token::Type::Dedent) ||
-		peek(Token::Type::Eof)
-		)) {
-
-		// Skips empty lines at the current indent level
+	while (true) {
 		if (match(Token::Type::Eol)) {
-			std::cout << "Bl" << std::endl;
+			/* Just skip */
+			continue;
+		} else if (peek(Token::Type::Dedent)) {
+			break;
+		} else if (peek(Token::Type::Eof)) {
+			break;
+		} else {
+			statements.push_back(parseStatement());
 		}
-
-		statements.push_back(parseStatement());
 	}
 
 	return std::make_unique<ASTNodeStatementSet>(beginning, std::move(statements));
@@ -114,9 +115,27 @@ std::unique_ptr<ASTNode> Parser::parseStatement() {
 		return parseVariableDeclaration();
 	} else if (match(Token::Type::IfKeyword)) {
 		return parseConditional();
+	} else if (match(Token::Type::ReturnKeyword)) {
+		return parseReturnStatement();
 	} else {
 		return parseExpressionStatement();
 	}
+}
+
+std::unique_ptr<ASTNode> Parser::parseReturnStatement() {
+	std::unique_ptr<ASTNode> expr;
+	Token start = m_previous;
+
+	if (peek(Token::Type::Eol)) {
+		/* Returns nothing */
+		expr = nullptr;
+	} else {
+		expr = parseExpression();
+	}
+
+	consume(Token::Type::Eol, "Expected newline after return statement");
+
+	return std::make_unique<ASTNodeFunctionReturn>(start, std::move(expr));
 }
 
 std::unique_ptr<ASTNode> Parser::parseConditional() {

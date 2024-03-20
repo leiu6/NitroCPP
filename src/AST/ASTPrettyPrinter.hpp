@@ -38,6 +38,8 @@ public:
 
 	void visit(ASTNodeFunctionDefinition& node) override;
 
+	void visit(ASTNodeFunctionReturn& node) override;
+
 private:
 	std::ostream& m_os;
 	int m_tabs;

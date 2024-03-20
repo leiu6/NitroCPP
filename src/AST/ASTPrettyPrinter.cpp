@@ -12,6 +12,7 @@
 #include "ASTNodeStatementSet.hpp"
 #include "ASTNodeConditional.hpp"
 #include "ASTNodeFunctionDefinition.hpp"
+#include "ASTNodeFunctionReturn.hpp"
 
 namespace Nitro {
 
@@ -177,6 +178,20 @@ void ASTPrettyPrinter::visit(ASTNodeFunctionDefinition& node) {
 	m_os << m_tabstr << "Contents -> {\n";
 	ASTPrettyPrinter printer(m_os, m_tabs + 1);
 	node.m_contents->visit(printer);
+	m_os << m_tabstr << "}\n";
+}
+
+void ASTPrettyPrinter::visit(ASTNodeFunctionReturn& node) {
+	m_os << m_tabstr << "Function Return: {\n";
+	m_os << m_tabstr << "Returns -> {\n";
+
+	if (node.m_expr) {
+		ASTPrettyPrinter printer(m_os, m_tabs + 1);
+		node.m_expr->visit(printer);
+	} else {
+		m_os << m_tabstr << "\t" << "Nothing...\n";
+	}
+
 	m_os << m_tabstr << "}\n";
 }
 

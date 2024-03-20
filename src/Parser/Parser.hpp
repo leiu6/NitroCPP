@@ -25,7 +25,7 @@ private:
 		m_had_error = true;
 		m_panic_mode = true;
 
-		std::cerr << "Error: " << m_current.line << ":" << m_current.col << ": " << msg << "\n";
+		std::cerr << "Error: " << m_previous.line << ":" << m_previous.col << ": " << msg << "\n";
 	}
 
 	inline Token advance() {
@@ -94,6 +94,7 @@ private:
 
 	std::unique_ptr<ASTNode> parseConditional();
 	std::unique_ptr<ASTNode> parseVariableDeclaration();
+	std::unique_ptr<ASTNode> parseReturnStatement();
 	std::unique_ptr<ASTNode> parseExpressionStatement();
 
 
