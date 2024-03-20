@@ -32,7 +32,6 @@ struct Token {
 		IfKeyword, ElseKeyword,
 		WhileKeyword, ForKeyword, ContinueKeyword, BreakKeyword,
 		ReturnKeyword, FuncKeyword,
-		ModuleKeyword,
 		LetKeyword,
 		TrueKeyword, FalseKeyword, NilKeyword,
 

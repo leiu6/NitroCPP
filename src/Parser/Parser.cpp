@@ -31,11 +31,6 @@ std::unique_ptr<ASTNode> Parser::parse() {
 std::unique_ptr<ASTNode> Parser::parseTopLevel() {
 	std::vector<std::unique_ptr<ASTNode>> program;
 
-	if (match(Token::Type::ModuleKeyword)) {
-		// We are defining a module
-		program.push_back(parseModuleDefinition());
-	}
-
 	while (!match(Token::Type::Eof)) {
 		if (match(Token::Type::FuncKeyword)) {
 			program.push_back(parseFunctionDefinition());
@@ -45,10 +40,6 @@ std::unique_ptr<ASTNode> Parser::parseTopLevel() {
 	}
 
 	return std::make_unique<ASTNodeStatementSet>(m_current, std::move(program));
-}
-
-std::unique_ptr<ASTNode> Parser::parseModuleDefinition() {
-	return nullptr;
 }
 
 std::unique_ptr<ASTNode> Parser::parseFunctionDefinition() {
@@ -102,6 +93,8 @@ std::unique_ptr<ASTNode> Parser::parseStatements() {
 			break;
 		} else if (peek(Token::Type::Eof)) {
 			break;
+		} else if (peek(Token::Type::FuncKeyword)) {
+			break; // TODO: implement better fix
 		} else {
 			statements.push_back(parseStatement());
 		}

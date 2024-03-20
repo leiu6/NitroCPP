@@ -163,7 +163,6 @@ Token::Type Lexer::identifierOrKeywordType() {
 		} break;
 		case 'i': return checkKeyword(1, 1, "f", Token::Type::IfKeyword);
 		case 'l': return checkKeyword(1, 2, "et", Token::Type::LetKeyword);
-		case 'm': return checkKeyword(1, 5, "odule", Token::Type::ModuleKeyword);
 		case 'n': return checkKeyword(1, 2, "il", Token::Type::NilKeyword);
 		case 'r': return checkKeyword(1, 5, "eturn", Token::Type::ReturnKeyword);
 		case 't': return checkKeyword(1, 3, "rue", Token::Type::TrueKeyword);
