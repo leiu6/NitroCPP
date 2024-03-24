@@ -14,6 +14,9 @@ set(SOURCES src/nitro.cpp
 	src/AST/ASTNode.cpp
 	src/AST/ASTPrettyPrinter.cpp
 	src/Parser/Parser.cpp
+	src/Runtime/Value/value.cpp
 )
 
 add_executable(nitro ${SOURCES})
+
+target_include_directories(nitro PRIVATE include)
